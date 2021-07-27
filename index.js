@@ -4,7 +4,7 @@ const pup = require("puppeteer");
 
 async function runesFor() {
     const browser = await pup.launch({
-        headless: false,
+        headless: true,
         defaultViewport: null,
         slowMo: 10
     });
@@ -27,13 +27,30 @@ async function runesFor() {
     console.log("BROUGHT TO FRONT");
 
     console.log("WAITING FOR SELECTOR");
+    
     // await page.waitForTimeout(5000);
 
-    await page.waitForSelector("#side-nav > div.side-nav-links > div:nth-child(3)");
+    try {
+        //works in headless mode
+        await page.waitForSelector("#side-nav_toggle");
+        await page.click("#side-nav_toggle");
+        await page.waitForSelector("#side-nav > div.side-nav-links > div > a:nth-child(4)");
+        await page.click("#side-nav > div.side-nav-links > div > a:nth-child(4)");
+        console.log("CLICKED ON SELECTOR");
+    }
+
+    catch(error) {
+        //DOES NOT WORK IN HEADLESS MODE, HEADLESS MUST BE FALSE FOR THE CATCH BLOCK TO RUN
+        console.log(`Something went wrong: ${error}`);
+        await page.waitForSelector("#side-nav > div.side-nav-links > div:nth-child(3)");
+        await page.click("#side-nav > div.side-nav-links > div:nth-child(3) > a:nth-child(5)", {delay: 100});
+    }
+
+    await page.screenshot({path: "uggScreenshot.jpg"});
+    
     
 
-    await page.click("#side-nav > div.side-nav-links > div:nth-child(3) > a:nth-child(5)", {delay: 100});
-    console.log("CLICKED ON SELECTOR");
+
 
     await page.waitForSelector("#content > div > div > div.champions-container");
     console.log("WAITED FOR CHAMPIONS");
