@@ -1,4 +1,5 @@
 const pup = require("puppeteer");
+var championsList = [];
 
 
 
@@ -72,10 +73,47 @@ async function runesFor() {
       });
       console.log(jsHandle); // JSHandle
 
+      var numOfChamps = await jsHandle.evaluate((champs) => champs.length);
 
 
-      const result = await jsHandle.evaluate((els) => els[0].innerHTML);
-      console.log(result);
+
+      const result = await jsHandle.evaluate((champs, numOfChamps) => {
+          var champions = [];
+          for(var i = 0; i < numOfChamps; i++) {
+            champions.push(champs[i].innerHTML);
+          }
+
+          return champions;
+      }, numOfChamps);
+    //   console.log(result);
+    //   console.log(typeof result);
+      for(var i = 0; i < numOfChamps; i++) {
+        var resultArray = result[i].split(">");
+        // console.log(resultArray);
+        resultArray.shift();
+        resultArray = resultArray.join("");
+        resultArray = resultArray.split("=");
+        resultArray.shift();
+        
+        
+        
+        resultArray = resultArray.join("");
+        resultArray = resultArray.split('"');
+        // console.log(resultArray[1]);
+        // console.log(resultArray[3]);
+        var champion = {
+            build: resultArray[1],
+            name: resultArray[3]
+        };
+        championsList.push(champion);
+      }
+
+    //   championsList.champion
+
+    console.log(championsList);
+    console.log("THIS IS THE CHAMPIONS LIST VARIABLE");
+
+    //   console.log("THIS IS THE RESULT AND END OF THE PROGRAM!!!!!!");
     
     //   const result = await jsHandle.evaluate((els) => {
     //       var random = [];
