@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/14raryana/leagueRuneFinder#readme",
   "dependencies": {
+    "inquirer": "^8.1.2",
     "puppeteer": "^10.1.0"
   }
 }

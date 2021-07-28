@@ -1,9 +1,42 @@
 const pup = require("puppeteer");
+const inquirer = require("inquirer");
+var questions = [
+    {
+        name: "champName",
+        message: "What is the name of the champion you would like?",
+        type: "input"
+    },
+    {
+        name: "role",
+        message: "Select your role",
+        type: "list",
+        choices: [
+            "Top",
+            "Mid",
+            "ADC",
+            "Support",
+            "Jungle"
+        ]
+    }
+]
+var answers = [];
 var championsList = [];
 
+async function champSelect() {
+    await inquirer.prompt(questions).then((res) => {
+        answers.push(res);
+    });
+    // console.log(answers);
+    // console.log("END");
+    // console.log(answers[0].champName);
+    // console.log(answers[0].role);
+    runesFor(answers[0].champName, answers[0].role);
+    // return;
+}
 
 
-async function runesFor() {
+
+async function runesFor(champName, role) {
     const browser = await pup.launch({
         headless: true,
         defaultViewport: null,
@@ -16,6 +49,13 @@ async function runesFor() {
     await page.goto("https://u.gg/");
     console.log("OPENED U.GG");
     // await page.waitForNavigation();
+    // await inquirer.prompt(questions).then((answer) => {
+    //     answers.push(answer);
+    //     // console.log(answers);
+    // });
+    // console.log(answers);
+    // console.log("END");
+    // return;
     console.log("WAITING 5 SECONDS");
     await page.waitForTimeout(5000);
 
@@ -99,6 +139,8 @@ async function runesFor() {
         
         resultArray = resultArray.join("");
         resultArray = resultArray.split('"');
+        resultArray[3] = resultArray[3].toLowerCase();
+        // resultArray[3].toLowerCase();
         // console.log(resultArray[1]);
         // console.log(resultArray[3]);
         var champion = {
@@ -112,6 +154,24 @@ async function runesFor() {
 
     console.log(championsList);
     console.log("THIS IS THE CHAMPIONS LIST VARIABLE");
+    var selectedChamp;
+
+    championsList.forEach((champ) => {
+        if(champ.name == champName) {
+            // console.log(champ);
+            // console.log("THIS SHOULD BE THE SELECTED CHAMPION");
+            // break;
+            selectedChamp = champ;
+        }
+        // else {
+        //     continue;
+        // }
+        // break;
+        // return champ;
+    });
+
+    console.log(selectedChamp);
+    console.log("THIS IS THE SELECTED CHAMP VARIABLE");
 
     //   console.log("THIS IS THE RESULT AND END OF THE PROGRAM!!!!!!");
     
@@ -190,7 +250,12 @@ async function runesFor() {
     // })
 }
 
-runesFor();
+// async function championSelect() {
+    
+// }
+
+// runesFor();
+champSelect();
 
 
 
