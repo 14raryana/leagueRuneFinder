@@ -21,6 +21,7 @@ var questions = [
 ]
 var answers = [];
 var championsList = [];
+var isHeadless;
 
 async function champSelect() {
     await inquirer.prompt(questions).then((res) => {
@@ -36,7 +37,7 @@ async function champSelect() {
 
 
 
-async function runesFor(champName, role) {
+async function runesFor(inputChamp, inputRole) {
     const browser = await pup.launch({
         headless: true,
         defaultViewport: null,
@@ -73,11 +74,18 @@ async function runesFor(champName, role) {
 
     try {
         //works in headless mode
-        await page.waitForSelector("#side-nav_toggle");
-        await page.click("#side-nav_toggle");
-        await page.waitForSelector("#side-nav > div.side-nav-links > div > a:nth-child(4)");
-        await page.click("#side-nav > div.side-nav-links > div > a:nth-child(4)");
-        console.log("CLICKED ON SELECTOR");
+        if(browser._process.spawnargs.includes("--headless")) {
+            isHeadless = true;
+            await page.waitForSelector("#side-nav_toggle");
+            await page.click("#side-nav_toggle");
+            await page.waitForSelector("#side-nav > div.side-nav-links > div > a:nth-child(4)");
+            await page.click("#side-nav > div.side-nav-links > div > a:nth-child(4)");
+            console.log("CLICKED ON SELECTOR");
+        }
+        else {
+            isHeadless = false;
+            throw "Headless mode is turned off.  Proceeding with non-headless mode...";
+        }
     }
 
     catch(error) {
@@ -87,7 +95,7 @@ async function runesFor(champName, role) {
         await page.click("#side-nav > div.side-nav-links > div:nth-child(3) > a:nth-child(5)", {delay: 100});
     }
 
-    await page.screenshot({path: "uggScreenshot.jpg"});
+    
     
     
 
@@ -119,33 +127,72 @@ async function runesFor(champName, role) {
 
       const result = await jsHandle.evaluate((champs, numOfChamps) => {
           var champions = [];
+          var champBuild = [];
+        //   console.log(champs);
+        //   console.log("THESE ARE THE CHAMPS!!!!!!!");
           for(var i = 0; i < numOfChamps; i++) {
-            champions.push(champs[i].innerHTML);
+              var champ = {};
+              champ.nameElement = champs[i].innerHTML;
+              champ.build = champs[i].href;
+              champions.push(champ);
+            // champions.push(champs[i].innerHTML);
           }
 
           return champions;
       }, numOfChamps);
+
+    //   console.log(result);
+    //   console.log("THIS IS THE RESULT CONSTANT!!!!!!!");
+
     //   console.log(result);
     //   console.log(typeof result);
       for(var i = 0; i < numOfChamps; i++) {
-        var resultArray = result[i].split(">");
-        // console.log(resultArray);
-        resultArray.shift();
-        resultArray = resultArray.join("");
-        resultArray = resultArray.split("=");
-        resultArray.shift();
+        //   console.log(result[i]);
+        //   console.log("THIS IS THE RESULT[i]");
+        //   continue;
+        var champName = result[i].nameElement.split(">");
+        var champBuild = result[i].build;
+        
+        for(var j = 0; j < 5; j++) {
+            // if(j == 0) {
+            //     console.log(champName);
+            // }
+            if(j == 4) {
+                champName.pop();
+                break;
+            }
+            champName.shift();
+        }
+        // console.log(champName[0])
+        // console.log(champName[0].split("<"));
+        // console.log("THIS IS THE RESULT ARRAY");
+        
+
+        champName = champName[0].split("<");
+        champName.pop();
+        // return;
+
+        // champName.shift();
+        // champName = champName.join("");
+        // champName = champName.split("=");
+        // champName.shift();
         
         
         
-        resultArray = resultArray.join("");
-        resultArray = resultArray.split('"');
-        resultArray[3] = resultArray[3].toLowerCase();
-        // resultArray[3].toLowerCase();
-        // console.log(resultArray[1]);
-        // console.log(resultArray[3]);
+        // champName = champName.join("");
+        // champName = champName.split('"');
+        // champName[3] = champName[3].toLowerCase();
+
+
+
+        // champName[3].toLowerCase();
+        // console.log(champName[1]);
+        // console.log(champName[3]);
+
+
         var champion = {
-            build: resultArray[1],
-            name: resultArray[3]
+            build: champBuild,
+            name: champName[0]
         };
         championsList.push(champion);
       }
@@ -154,10 +201,20 @@ async function runesFor(champName, role) {
 
     console.log(championsList);
     console.log("THIS IS THE CHAMPIONS LIST VARIABLE");
+    // return;
     var selectedChamp;
+    console.log(inputChamp);
+    console.log("THIS IS THE INPUT CHAMP");
+    // for(var x = 0; x < championsList.length; x++) {
+        // console.log(championsList[x].name);
+        // console.log("THESE ARE THE CHAMP NAMES!!!!")
+    // }
+    // return;
 
     championsList.forEach((champ) => {
-        if(champ.name == champName) {
+        console.log(champ.name);
+        console.log("THIS IS THE CHAMP.NAME");
+        if(champ.name.toLowerCase() == inputChamp.toLowerCase()) {
             // console.log(champ);
             // console.log("THIS SHOULD BE THE SELECTED CHAMPION");
             // break;
@@ -172,6 +229,246 @@ async function runesFor(champName, role) {
 
     console.log(selectedChamp);
     console.log("THIS IS THE SELECTED CHAMP VARIABLE");
+    // return;
+
+    switch(inputRole) {
+        case "Top":
+            inputRole = "top"
+            break;
+
+        case "Mid":
+            inputRole = "middle"
+            break;
+
+        case "Adc":
+            inputRole = "adc"
+            break;
+
+        case "Support":
+            inputRole = "support"
+            break;
+        
+        case "Jungle":
+            inputRole = "jungle"
+            break;
+    }
+    console.log("OPENING CHAMP BUILD PAGE...");
+    await page.goto(`${selectedChamp.build}?role=${inputRole}`);
+    console.log("OPENED CHAMP BUILD PAGE");
+    // return;
+
+    // console.log(selectedChamp);
+    // console.log("THIS IS THE SELECTED CHAMP VARIABLE");
+    // await page.waitForSelector("#content > div > div > div > div > div.filter-manager.media-query.media-query_TABLET__DESKTOP_LARGE > div > div > div.media-query.media-query_TABLET__DESKTOP_LARGE.media-query.media-query_MOBILE_SMALL__DESKTOP_SMALL")
+    // await page.waitForSelector("#content > div > div > div > div > div.filter-manager.media-query.media-query_TABLET__DESKTOP_LARGE > div > div > div.media-query.media-query_TABLET__DESKTOP_LARGE.media-query.media-query_MOBILE_SMALL__DESKTOP_SMALL > div > div > div");
+    // await page.click("#content > div > div > div > div > div.filter-manager.media-query.media-query_TABLET__DESKTOP_LARGE > div > div > div.media-query.media-query_TABLET__DESKTOP_LARGE.media-query.media-query_MOBILE_SMALL__DESKTOP_SMALL")
+    console.log("TAKING SCREENSHOT...");
+    await page.screenshot({path: "uggScreenshot.jpg"});
+    console.log("SCREENSHOT COMPLETE!!!!!!!!!");
+
+    // await page.waitForSelector("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2)");
+    // await page.waitForSelector("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1) > div");
+    await page.waitForSelector("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1");
+
+    await page.waitForSelector("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1) > div")
+    await page.waitForSelector("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1)");
+    var runeTree = await page.waitForSelector("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1) > div > div.rune-tree_header");
+
+
+// EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE
+
+    
+    runeTree = await page.evaluate(() => Array.from(document.getElementsByClassName('perk-style-title'), e => e.innerHTML));
+    var activeRunes = await page.evaluate(() => Array.from(document.getElementsByClassName("perk-active"), (key) => key.innerHTML));
+    // console.log(runeTree);
+    selectedChamp.build = {};
+    selectedChamp.build.primaryTree = [];
+    selectedChamp.build.secondaryTree = [];
+
+    if(isHeadless) {
+        runeTree.shift();
+        if(runeTree.length > 1) {
+            runeTree.shift();
+        }
+    }
+
+    else {
+        runeTree.pop();
+        if(runeTree.length > 1) {
+            runeTree.pop();
+        }
+    }
+    selectedChamp.build.primaryTree.push(...runeTree);
+    
+    // for(var )
+    
+
+    
+// ;    return;
+
+    var activeRuneNames = activeRunes.map((rune) => {
+        // rune = rune;
+        // for(var i = 0; i < rune.length; i++) {
+        //     rune = rune[i].split("=");
+        // }
+        // return rune;
+        rune = rune.split("=");
+        for(var i = 0; i < 3; i++) {
+            rune.shift();
+        }
+
+        rune = rune[0];
+        rune = rune.split('"');
+        rune.shift();
+        rune.pop();
+        rune = rune[0];
+        return rune;
+        // for(var i = 0; i < 3; i++) {
+        //     rune.shift();
+        // }
+        // return rune;
+        // for(var j = 0; j < rune.length; j++) {
+        //     rune = rune[j].split('"');
+        // }
+        // return rune;
+    });
+
+    selectedChamp.build.primaryTree.push(...activeRuneNames);
+
+    console.log(selectedChamp);
+    console.log(selectedChamp.build);
+    console.log("THIS IS THE SELECTED CHAMP AND SELECTED CHAMP.BUILD RESPECTIVELY");
+
+// EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE
+
+
+
+// EXTRACTING SECONDARY TREE------------EXTRACTING SECONDARY TREE------------EXTRACTING SECONDARY TREE------------EXTRACTING SECONDARY TREE------------EXTRACTING SECONDARY TREE
+
+
+    // runeTree = await page.evaluate(() => Array.from(document.getElementsByClassName('perk-style-title'), e => e.innerHTML));
+
+
+
+
+
+
+
+
+
+
+    
+    // console.log(activeRuneNames);
+    // console.log("THESE ARE THE ACTIVE RUNE NAMES!!!!!");
+    // console.log(runeTree);
+    return;
+
+    activeRunes.forEach((rune) => {
+        rune.split("=");
+    });
+
+    console.log(activeRunes);
+    // console.log(activeRunes[0].split("="));
+    console.log("THESE ARE THE ACTIVE RUNES");
+
+
+    var runeTree = [];
+    var poop = 0;
+    console.log(runeTree);
+    console.log(runeTree.length);
+    console.log("THIS IS THE runeTree VARIABLE");
+
+    for(var i = 0; i < runeTree.length - 2; i++) {
+        runeTree.push(runeTree[i]);
+    }
+
+    console.log(runeTree);
+    console.log("THESE ARE THE RUNES DAWG");
+
+    // runes.forEach(rune => {
+    //     if(count > 1) {
+    //         break;
+    //     }
+    //     runeTree.push(rune);
+    //     poop++;
+    //     // console.log(tweet);
+    // });
+    // console.log(runeTree);
+    // console.log("THIS IS THE RUNE TREE");
+    return;
+
+    var bigPeePee = await page.$$(".rune-tree_header", (shit) => {
+        return shit;
+        // return document.getElementById("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1) > div > div.rune-tree_header");
+    });
+    console.log(bigPeePee);
+    console.log(bigPeePee.length);
+    console.log("THIS IS THE BIG PEE PEE VARIABLE");
+    // return;
+    var littlePeePee = await page.evaluateHandle((bigPeePee) => {
+        return bigPeePee;
+    });
+    console.log(littlePeePee);
+    console.log("THIS IS THE LITTLE PEE PEE VARIABLE!!!!!!!");
+
+    var normalPeePee = await littlePeePee.$$eval((shitBird) => {
+        return shitBird;
+    });
+    console.log(normalPeePee);
+    console.log("THIS IS NORMAL SIZED PEE PEE VARIABLE!!!!!");
+    return;
+    
+    var peePee = await page.evaluateHandle(() => {
+        var hell = document.getElementById("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1");
+        return hell;
+    });
+
+    var shitEars = await peePee.evaluate((dicks) => {
+        console.log(dicks);
+        return dicks;
+    });
+
+    console.log(peePee);
+    console.log("THIS IS THE PEEPEE VARIABLE!!!!!!!!");
+
+    console.log(shitEars);
+    console.log("THIS IS THE SHIT EARS VARIABLE");
+
+    // await page.waitForSelector("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1) > div");
+    // var shit = await page.waitForSelector("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1) > div > div.rune-tree_header");
+    // var whore = await page.evaluate(() => {
+    //     var penis = document.getElementById("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1) > div > div.rune-tree_header > div.perk-style-title");
+    //     return penis;
+    // });
+
+    // console.log(whore);
+    // console.log("THIS IS THE WHORE VARIABLE!!!!!!");
+    // var fuckFace = await page.waitForSelector("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1) > div > div.rune-tree_header > div.rune-image-container");
+    // console.log(fuckFace);#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1)
+
+    // var handle = await page.evaluate(() => {
+    //     var ele = document.getElementById("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1) > div > div.rune-tree_header > div.rune-image-container");
+    //     return ele;
+    // });
+
+
+    
+
+    // var shitDick = handle.evaluate(())
+
+    // const jsHandle = await page.evaluateHandle(() => {
+    //     const elements = document.getElementsByClassName('champion-link');
+    //     return elements;
+    //   });
+    
+    // var hello = await page.evaluateHandle(() => {
+    //     console.log("IN HELLO EVALUATE HANDLE FUNCTION");
+    //     const aatrox = document.getElementById("content > div > div > div.champions-container > a:nth-child(1)");
+    //     return aatrox;
+    // });
+
+    console.log("THIS IS FUCK FACE VARIABLE!!!!!!!");
+    
 
     //   console.log("THIS IS THE RESULT AND END OF THE PROGRAM!!!!!!");
     
