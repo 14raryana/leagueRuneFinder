@@ -338,6 +338,7 @@ async function runesFor(inputChamp, inputRole) {
     console.log(selectedChamp);
     console.log(selectedChamp.build);
     console.log("THIS IS THE SELECTED CHAMP AND SELECTED CHAMP.BUILD RESPECTIVELY");
+    console.table(selectedChamp.build.primaryTree);
 
 // EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE
 
