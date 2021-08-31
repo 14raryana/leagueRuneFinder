@@ -273,6 +273,7 @@ async function runesFor(inputChamp, inputRole) {
     await page.waitForSelector("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1) > div")
     await page.waitForSelector("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1)");
     var runeTree = await page.waitForSelector("#content > div > div > div > div > div.champion-profile-page > div.champion-recommended-build > div.content-section.content-section_no-padding.grid-1 > div.content-section_content.recommended-build_runes > div:nth-child(2) > div.rune-trees-container-2.media-query.media-query_MOBILE_LARGE__DESKTOP_LARGE > div:nth-child(1) > div > div.rune-tree_header");
+    
 
 
 // EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE
@@ -280,7 +281,36 @@ async function runesFor(inputChamp, inputRole) {
     
     runeTree = await page.evaluate(() => Array.from(document.getElementsByClassName('perk-style-title'), e => e.innerHTML));
     var activeRunes = await page.evaluate(() => Array.from(document.getElementsByClassName("perk-active"), (key) => key.innerHTML));
+    var activeShards = await page.evaluate(() => Array.from(document.getElementsByClassName("shard-active"), (key) => key.innerHTML));
+    for(var i = 0; i < 3; i++) {
+        activeShards.shift();
+    }
+
+    var activeShardNames = activeShards.map((shard) => {
+        // console.log(shard);
+        // console.log("AHHHHH YAAAAAAAA!!!!!!");
+        shard = shard.split("=");
+        for(var i = 0; i < 3; i++) {
+            shard.shift();
+        }
+        shard = shard[0];
+        // console.log(typeof shard);
+        shard = shard.split('"');
+        shard.shift();
+        shard.pop();
+        return shard[0];
+    })
+    // console.log(activeShardNames);
+    // console.log("THESE ARE THE ACTIVE SHARD NAMES");
     // console.log(runeTree);
+    // console.log("THIS IS THE RUNE TREE MOTHA FUCKA!!!!!");
+
+    // console.log(activeRunes);
+    // console.log("THESE ARE THE ACTIVE RUNES!!!!");
+    // return;
+
+
+    
     selectedChamp.build = {};
     selectedChamp.build.primaryTree = [];
     selectedChamp.build.secondaryTree = [];
@@ -298,7 +328,17 @@ async function runesFor(inputChamp, inputRole) {
             runeTree.pop();
         }
     }
-    selectedChamp.build.primaryTree.push(...runeTree);
+
+    // console.log(runeTree);
+    // console.log('THIS IS THE RUNE TREE MOTHA FUCKA!!!!!');
+    // return;
+    selectedChamp.build.primaryTree.push(runeTree[0]);
+    selectedChamp.build.secondaryTree.push(runeTree[1]);
+    // return;
+
+    // console.log(selectedChamp.build.secondaryTree);
+    // console.log('THIS IS THE SECONDARY TREEE DAWG!!!!!');
+    // return;
     
     // for(var )
     
@@ -333,12 +373,38 @@ async function runesFor(inputChamp, inputRole) {
         // return rune;
     });
 
-    selectedChamp.build.primaryTree.push(...activeRuneNames);
+    for(var i = 0; i < 6; i++) {
+        activeRuneNames.pop();
+    }
 
-    console.log(selectedChamp);
-    console.log(selectedChamp.build);
-    console.log("THIS IS THE SELECTED CHAMP AND SELECTED CHAMP.BUILD RESPECTIVELY");
+    console.log(activeRuneNames);
+    console.log("THESE ARE THE ACTIVE RUNE NAMES");
+    // return;
+
+    // selectedChamp.build.primaryTree.push(activeRuneNames)
+
+    for(var i = 0; i < 4; i++) {
+        selectedChamp.build.primaryTree.push(activeRuneNames.shift());
+    }
+    console.log(selectedChamp.build.primaryTree);
+    console.log("THIS IS THE PRIMARY TREE");
+    console.log(selectedChamp.build.secondaryTree);
+    console.log("THIS IS THE SECONDARY TREE");
+    console.log(activeRuneNames);
+    console.log("THESE ARE THE ACTIVE RUNES AGAIN!!!!!!!!!!");
+    selectedChamp.build.secondaryTree.push(...activeRuneNames);
+    selectedChamp.build.secondaryTree.push(...activeShardNames);
+    console.log(selectedChamp.build.secondaryTree);
+    console.log("THIS IS THE SECONDARY TREE NIGGA!!!!!!!!");
+    // return;
+
+    // selectedChamp.build.primaryTree.push(...activeRuneNames);
+
+    // console.log(selectedChamp);
+    // console.log(selectedChamp.build);
+    // console.log("THIS IS THE SELECTED CHAMP AND SELECTED CHAMP.BUILD RESPECTIVELY");
     console.table(selectedChamp.build.primaryTree);
+    console.table(selectedChamp.build.secondaryTree);
 
 // EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE------------EXTRACTING PRIMARY TREE
 
